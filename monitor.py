@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pymavlink import mavutil
 
 DEFAULT_PORT = "/dev/ttyTHS1"
-DEFAULT_BAUD = 115200
+DEFAULT_BAUD = 921600
 DEFAULT_HZ   = 5.0
 
 # PX4 main modes (8-bit)
