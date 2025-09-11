@@ -1,4 +1,4 @@
-# PX4 Jetson MAVSDK Utilities
+# YouOceans - UAV SkyBuoy 1 - PX4 Jetson MAVSDK Utilities Repository
 
 This repository contains lightweight Python utilities for monitoring, debugging, and basic control of a PX4-based drone from a Jetson (or other companion computer) using [MAVSDK-Python 3.10.x](https://mavsdk.mavlink.io/main/en/).
 
