@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import asyncio
+import logging
 from mavsdk import System, telemetry
+
+logging.basicConfig(level=logging.INFO)
 
 SERIAL = "serial:///dev/ttyTHS1:230400"
 
