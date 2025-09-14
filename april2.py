@@ -15,7 +15,7 @@ from tools.csi_cam import CSIStream, CSIConfig
 
 # --- fixed camera->body rotation for your mount (left=front, top=right, optical axis down)
 R_CB = np.array([[-1., 0., 0.],
-                 [ 0.,-1., 0.],
+                 [ 0., 1., 0.],
                  [ 0., 0., 1.]], dtype=float)
 
 def parse_args():
