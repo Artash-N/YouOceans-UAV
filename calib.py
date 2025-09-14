@@ -23,7 +23,7 @@ COLOR = "bgr"  # important: we want BGR, not gray, so we can convert reliably
 SAVE_PATH = "camera_calib.npz"
 
 LIVE_ERROR_MIN_FRAMES = 10
-LIVE_ERROR_DEFAULT = True
+LIVE_ERROR_DEFAULT = False
 # =========================================================
 
 pattern_size = (INNER_COLS, INNER_ROWS)
