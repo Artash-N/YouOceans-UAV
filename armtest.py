@@ -5,7 +5,7 @@ import sys
 import contextlib
 import grpc
 from grpc import aio
-from mavsdk import System
+from mavsdk import System, action
 
 logging.basicConfig(level=logging.INFO)
 SERIAL = "serial:///dev/ttyTHS1:230400"
@@ -56,8 +56,15 @@ async def main():
 
         try:
             await arm_once(drone)
+
+        # ---------- NEW: handle arming denied ------------
+        except action.ActionError as e:
+            logging.error(f"❌ Drone refused to arm: {e}")
+            sys.exit(10)
+        # -------------------------------------------------
+
         except aio.AioRpcError as e:
-            if e.code() == grpc.StatusCode.UNAVAILABLE:  # ✅ Correct namespace
+            if e.code() == grpc.StatusCode.UNAVAILABLE:
                 logging.warning("⚠️ Link dropped mid-command (Socket closed). Reconnecting...")
                 if await reconnect_system(drone):
                     await wait_for_health(drone)
@@ -67,6 +74,7 @@ async def main():
                     sys.exit(2)
             else:
                 raise
+
         logging.info("✅ Done cleanly")
 
     except Exception as e:
