@@ -3,6 +3,7 @@ import asyncio
 import logging
 import sys
 import contextlib
+import grpc
 from grpc import aio
 from mavsdk import System
 
@@ -56,7 +57,7 @@ async def main():
         try:
             await arm_once(drone)
         except aio.AioRpcError as e:
-            if e.code() == aio.StatusCode.UNAVAILABLE:
+            if e.code() == grpc.StatusCode.UNAVAILABLE:  # ✅ Correct namespace
                 logging.warning("⚠️ Link dropped mid-command (Socket closed). Reconnecting...")
                 if await reconnect_system(drone):
                     await wait_for_health(drone)
