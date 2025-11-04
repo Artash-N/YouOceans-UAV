@@ -5,17 +5,10 @@ import sys
 import contextlib
 import grpc
 from grpc import aio
-from mavsdk import System, action
+from mavsdk import System
 
 logging.basicConfig(level=logging.INFO)
 SERIAL = "serial:///dev/ttyTHS1:230400"
-
-def hard_exit(code: int):
-    """Force immediate exit from async context with cleanup."""
-    for task in asyncio.all_tasks():
-        task.cancel()
-    asyncio.get_event_loop().stop()
-    sys.exit(code)
 
 async def wait_for_connection(drone):
     async for s in drone.core.connection_state():
@@ -26,11 +19,7 @@ async def wait_for_connection(drone):
 
 async def wait_for_health(drone):
     async for h in drone.telemetry.health():
-        if (
-            h.is_gyrometer_calibration_ok
-            and h.is_accelerometer_calibration_ok
-            and h.is_magnetometer_calibration_ok
-        ):
+        if h.is_gyrometer_calibration_ok and h.is_accelerometer_calibration_ok and h.is_magnetometer_calibration_ok:
             logging.info("✅ Sensors OK")
             return True
     return False
@@ -61,43 +50,28 @@ async def main():
     try:
         if not await reconnect_system(drone):
             logging.error("Could not connect to drone.")
-            hard_exit(1)
+            sys.exit(1)
 
         await wait_for_health(drone)
 
         try:
             await arm_once(drone)
-
         except aio.AioRpcError as e:
-            # Connection dropped mid-command
-            if e.code() == grpc.StatusCode.UNAVAILABLE:
+            if e.code() == grpc.StatusCode.UNAVAILABLE:  # ✅ Correct namespace
                 logging.warning("⚠️ Link dropped mid-command (Socket closed). Reconnecting...")
                 if await reconnect_system(drone):
                     await wait_for_health(drone)
-                    try:
-                        await arm_once(drone)
-                    except action.ActionError as e2:
-                        logging.error(f"❌ Drone refused to arm after reconnect: {e2}")
-                        hard_exit(10)
+                    await arm_once(drone)
                 else:
                     logging.error("❌ Reconnect attempts failed.")
-                    hard_exit(2)
+                    sys.exit(2)
             else:
-                logging.error(f"❌ gRPC error: {e.code()} - {e.details()}")
-                hard_exit(5)
-
-        except action.ActionError as e:
-            # Drone refused arming (wrong mode, safety switch, etc.)
-            logging.error(f"❌ Drone refused to arm: {e}")
-            hard_exit(10)
-
+                raise
         logging.info("✅ Done cleanly")
-        hard_exit(0)
 
     except Exception as e:
         logging.exception(f"Fatal error: {e}")
-        hard_exit(99)
-
+        sys.exit(99)
     finally:
         with contextlib.suppress(asyncio.CancelledError):
             for t in asyncio.all_tasks():
@@ -106,7 +80,4 @@ async def main():
         logging.info("🧹 Cleanup complete.")
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except SystemExit as e:
-        sys.exit(e.code)
+    asyncio.run(main())
