@@ -55,6 +55,3 @@ async def main():
 if __name__ == "__main__":
     import contextlib
     asyncio.run(main())
-
-
-so i want to make it so that even if theres an error the code terminates cleanly w an error code
