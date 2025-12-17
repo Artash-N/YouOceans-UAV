@@ -14,7 +14,6 @@ REACH_TIMEOUT_S = 45
 HOVER_SEC = 5
 
 async def say(drone: System, text: str, level: StatusTextType = StatusTextType.INFO):
-    # Keep messages short; GCS truncates long ones.
     await drone.server_utility.send_status_text(level, text)
 
 async def wait_connected(drone: System):
@@ -37,7 +36,6 @@ async def get_home_abs_alt(drone: System) -> float:
 
 async def wait_until_alt_reached(drone: System, target_abs_alt: float,
                                  tol_m: float = ALT_TOL_M, timeout_s: int = REACH_TIMEOUT_S) -> bool:
-    """Wait until absolute altitude within tol_m of target_abs_alt or timeout."""
     deadline = asyncio.get_event_loop().time() + timeout_s
     async for pos in drone.telemetry.position():
         if pos.absolute_altitude_m is not None:
@@ -47,7 +45,6 @@ async def wait_until_alt_reached(drone: System, target_abs_alt: float,
             return False
 
 async def status_text_printer(drone: System):
-    # Mirror PX4 STATUSTEXT to the console
     try:
         async for st in drone.telemetry.status_text():
             print(f"PX4[{st.type}]: {st.text}")
@@ -77,7 +74,6 @@ async def main():
         await say(drone, f"Takeoff to {TAKEOFF_ALT_M:.1f} m")
         await drone.action.takeoff()
 
-        # Wait until we are actually ~5 m AGL
         reached = await wait_until_alt_reached(drone, target_abs, tol_m=ALT_TOL_M, timeout_s=REACH_TIMEOUT_S)
         if reached:
             await say(drone, f"Reached {TAKEOFF_ALT_M:.1f} m, hover {HOVER_SEC}s")
@@ -89,7 +85,6 @@ async def main():
         await say(drone, "Landing…")
         await drone.action.land()
 
-        # Wait until disarmed (landed)
         async for armed in drone.telemetry.armed():
             if not armed:
                 await say(drone, "Landed & disarmed")
